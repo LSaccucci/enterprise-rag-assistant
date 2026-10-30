@@ -1,0 +1,30 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables
+.env
+.env.*
+
+# Keep the example environment file
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+
+# Local application data
+data/raw/
+data/processed/
+
+# Operating system
+.DS_Store
+Thumbs.db
