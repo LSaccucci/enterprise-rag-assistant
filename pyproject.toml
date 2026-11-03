@@ -10,7 +10,9 @@ description = "A local-first RAG assistant for technical documentation."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
-dependencies = []
+dependencies = [
+    "beautifulsoup4>=4.12",
+]
 
 [project.optional-dependencies]
 dev = [
