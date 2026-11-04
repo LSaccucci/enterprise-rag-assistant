@@ -22,8 +22,7 @@ venv/
 .vscode/
 
 # Local application data
-data/raw/
-data/processed/
+data/
 
 # Operating system
 .DS_Store
