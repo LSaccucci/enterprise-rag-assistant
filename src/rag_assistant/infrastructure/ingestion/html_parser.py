@@ -27,7 +27,9 @@ class BeautifulSoupHtmlParser:
         for element in soup(["script", "style", "noscript"]):
             element.decompose()
 
-        content_element = soup.body or soup
+        content_element = self._select_content_element(soup)
+        self._remove_non_content_elements(content_element)
+
         sections = self._extract_sections(content_element)
 
         if not sections:
@@ -125,6 +127,14 @@ class BeautifulSoupHtmlParser:
 
                 return
 
+            if node.name == "li":
+                item_text = node.get_text(" ", strip=True)
+
+                if item_text:
+                    current_content.append(f"- {item_text}")
+
+                return
+
             for child in node.children:
                 visit(child)
 
@@ -132,3 +142,26 @@ class BeautifulSoupHtmlParser:
         flush_section()
 
         return tuple(sections)
+
+    @staticmethod
+    def _select_content_element(soup: BeautifulSoup) -> Tag:
+        """Select the most likely main content container."""
+
+        main_element = soup.find("main")
+        if main_element:
+            return main_element
+
+        article_element = soup.find("article")
+        if article_element:
+            return article_element
+
+        return soup.body or soup
+
+    @staticmethod
+    def _remove_non_content_elements(content_element: Tag) -> None:
+        """Remove common non-content elements from the selected container."""
+
+        for element in content_element.find_all(
+                ["nav", "footer", "aside"]
+        ):
+            element.decompose()

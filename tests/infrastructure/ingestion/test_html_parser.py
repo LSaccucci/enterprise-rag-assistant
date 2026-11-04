@@ -315,3 +315,154 @@ def test_parse_preserves_content_before_first_heading(
 
     assert result.sections[1].section_path == ("Installation",)
     assert result.sections[1].content == "Installation instructions."
+
+
+def test_parse_prefers_main_content(
+    parser: BeautifulSoupHtmlParser,
+) -> None:
+    html = """
+    <html>
+        <head><title>Documentation</title></head>
+        <body>
+            <nav>Navigation content</nav>
+            <main>
+                <h1>Python Documentation</h1>
+                <p>Main documentation content.</p>
+            </main>
+            <footer>Footer content</footer>
+        </body>
+    </html>
+    """
+
+    result = parser.parse(
+        html=html,
+        source_url="https://example.com/docs",
+    )
+
+    assert len(result.sections) == 1
+    assert result.sections[0].content == "Main documentation content."
+    assert "Navigation content" not in result.sections[0].content
+    assert "Footer content" not in result.sections[0].content
+
+
+def test_parse_uses_article_when_main_is_missing(
+    parser: BeautifulSoupHtmlParser,
+) -> None:
+    html = """
+    <html>
+        <head><title>Documentation</title></head>
+        <body>
+            <nav>Navigation content</nav>
+            <article>
+                <h1>Article title</h1>
+                <p>Article content.</p>
+            </article>
+        </body>
+    </html>
+    """
+
+    result = parser.parse(
+        html=html,
+        source_url="https://example.com/article",
+    )
+
+    assert len(result.sections) == 1
+    assert result.sections[0].content == "Article content."
+
+
+def test_parse_removes_non_content_elements_from_body(
+    parser: BeautifulSoupHtmlParser,
+) -> None:
+    html = """
+    <html>
+        <head><title>Documentation</title></head>
+        <body>
+            <nav>Navigation content</nav>
+            <h1>Documentation</h1>
+            <p>Main content.</p>
+            <aside>Sidebar content</aside>
+            <footer>Footer content</footer>
+        </body>
+    </html>
+    """
+
+    result = parser.parse(
+        html=html,
+        source_url="https://example.com/docs",
+    )
+
+    assert len(result.sections) == 1
+    content = result.sections[0].content
+
+    assert content == "Main content."
+    assert "Navigation content" not in content
+    assert "Sidebar content" not in content
+    assert "Footer content" not in content
+
+
+def test_parse_extracts_text_from_multiple_html_elements(
+    parser: BeautifulSoupHtmlParser,
+) -> None:
+    html = """
+    <html>
+        <head><title>Documentation</title></head>
+        <body>
+            <main>
+                <h1>Installation</h1>
+                Text outside a paragraph.
+                <div>Content inside a div.</div>
+                <ul>
+                    <li>First item.</li>
+                    <li>Second item.</li>
+                </ul>
+                <strong>Important information.</strong>
+            </main>
+        </body>
+    </html>
+    """
+
+    result = parser.parse(
+        html=html,
+        source_url="https://example.com/docs",
+    )
+
+    content = " ".join(section.content for section in result.sections)
+
+    assert "Text outside a paragraph." in content
+    assert "Content inside a div." in content
+    assert "First item." in content
+    assert "Second item." in content
+    assert "Important information." in content
+
+
+def test_parse_preserves_list_item_boundaries(
+    parser: BeautifulSoupHtmlParser,
+) -> None:
+    html = """
+    <html>
+        <head><title>Supported Platforms</title></head>
+        <body>
+            <main>
+                <h1>Supported Platforms</h1>
+                <p>Supported operating systems:</p>
+                <ul>
+                    <li>Windows</li>
+                    <li>Linux</li>
+                    <li>macOS</li>
+                </ul>
+            </main>
+        </body>
+    </html>
+    """
+
+    result = parser.parse(
+        html=html,
+        source_url="https://example.com/platforms",
+    )
+
+    content = result.sections[0].content
+
+    assert "Supported operating systems:" in content
+    assert "- Windows" in content
+    assert "- Linux" in content
+    assert "- macOS" in content
