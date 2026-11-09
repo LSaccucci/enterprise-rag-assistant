@@ -2,7 +2,7 @@ import httpx
 import pytest
 
 from rag_assistant.core.exceptions import EmbeddingError
-from rag_assistant.infrastructure.ai_providers.embeddings.ollama_embedding_provider import (
+from rag_assistant.infrastructure.ai_providers.embeddings.ollama_embedding_provider import (  # noqa: E501
     OllamaEmbeddingProvider,
 )
 
